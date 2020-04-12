@@ -4,7 +4,9 @@ namespace Swisschain.Extensions.Idempotency.EfCore
 {
     public static class ModelBuilderExtensions
     {
-        public static ModelBuilder BuildOutbox(this ModelBuilder modelBuilder, string tableName = default, long startAggregateIdFrom = 1L)
+        public static ModelBuilder BuildOutbox(this ModelBuilder modelBuilder, 
+            string tableName = default, 
+            long? startAggregateIdFrom = null)
         {
             modelBuilder.Entity<OutboxEntity>()
                 .ToTable(tableName ?? "outbox")
@@ -12,7 +14,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
 
             modelBuilder.Entity<OutboxEntity>()
                 .Property(x => x.AggregateId)
-                .HasIdentityOptions(startValue: startAggregateIdFrom)
+                .HasIdentityOptions(startAggregateIdFrom)
                 .ValueGeneratedOnAdd();
 
             return modelBuilder;
