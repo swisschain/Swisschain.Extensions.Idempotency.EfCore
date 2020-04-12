@@ -6,7 +6,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
     {
         public static ModelBuilder BuildOutbox(this ModelBuilder modelBuilder, 
             string tableName = default, 
-            long? startAggregateIdFrom = null)
+            long startAggregateIdFrom = 2)
         {
             modelBuilder.Entity<OutboxEntity>()
                 .ToTable(tableName ?? "outbox")
