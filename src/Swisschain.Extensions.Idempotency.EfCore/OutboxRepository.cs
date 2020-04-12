@@ -95,7 +95,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
                 RequestId = outbox.RequestId,
                 AggregateId = outbox.AggregateId,
                 IsStored = outbox.IsStored || reason == OutboxPersistingReason.Storing,
-                IsShipped = outbox.IsDispatched|| reason == OutboxPersistingReason.Dispatching,
+                IsDispatched = outbox.IsDispatched|| reason == OutboxPersistingReason.Dispatching,
                 Response = response,
                 Commands = commands,
                 Events = events,
@@ -112,7 +112,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             return  Outbox.Restore(entity.RequestId,
                 entity.AggregateId,
                 entity.IsStored,
-                entity.IsShipped,
+                entity.IsDispatched,
                 response,
                 commands,
                 events);

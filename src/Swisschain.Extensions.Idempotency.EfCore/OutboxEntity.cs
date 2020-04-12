@@ -8,6 +8,6 @@
         public string Events { get; set; }
         public string Commands { get; set; }
         public bool IsStored { get; set; }
-        public bool IsShipped { get; set; }
+        public bool IsDispatched { get; set; }
     }
 }
