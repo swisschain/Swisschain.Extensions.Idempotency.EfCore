@@ -2,8 +2,8 @@
 
 namespace Swisschain.Extensions.Idempotency.EfCore
 {
-    public interface IDbContextWithOutbox
+    public interface IDbContextWithIdGenerator
     {
-        DbSet<OutboxEntity> Outbox { get; }
+        DbSet<IdGeneratorEntity> IsGenerator { get; }
     }
 }
