@@ -5,25 +5,24 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Swisschain.Extensions.Idempotency.EfCore
 {
-    public class UnitOfWorkBase<TDbContext> : UnitOfWorkBase
+    public abstract class UnitOfWorkBase<TDbContext> : UnitOfWorkBase
         where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator 
     {
         private TDbContext _dbContext;
         private IDbContextTransaction _transaction;
         
-        public UnitOfWorkBase(IOutboxDispatcher defaultOutboxDispatcher) : 
-            base(defaultOutboxDispatcher)
-        {
-        }
+        protected abstract void ProvisionRepositories(TDbContext dbContext);
 
-        public async Task Init(TDbContext dbContext, Outbox outbox)
+        public async Task Init(IOutboxDispatcher defaultOutboxDispatcher, TDbContext dbContext, Outbox outbox)
         {
-            var outboxWriteRepository = new OutboxWriteRepository<TDbContext>(dbContext);
-
             _dbContext = dbContext;
             _transaction = await dbContext.Database.BeginTransactionAsync();
 
-            await Init(outboxWriteRepository, outbox);
+            var outboxWriteRepository = new OutboxWriteRepository<TDbContext>(dbContext);
+
+            ProvisionRepositories(dbContext);
+
+            await Init(defaultOutboxDispatcher, outboxWriteRepository, outbox);
         }
 
         protected override Task CommitImpl()

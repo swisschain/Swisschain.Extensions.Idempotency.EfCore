@@ -8,10 +8,12 @@ namespace Swisschain.Extensions.Idempotency.EfCore
         where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
         where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator 
     {
+        private readonly IOutboxDispatcher _defaultOutboxDispatcher;
         private readonly Func<TDbContext> _dbContextFactory;
 
-        public UnitOfWorkFactory(Func<TDbContext> dbContextFactory)
+        public UnitOfWorkFactory(IOutboxDispatcher defaultOutboxDispatcher, Func<TDbContext> dbContextFactory)
         {
+            _defaultOutboxDispatcher = defaultOutboxDispatcher;
             _dbContextFactory = dbContextFactory;
         }
 
@@ -20,7 +22,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             var dbContext = _dbContextFactory.Invoke();
             var unitOfWork = new TUnitOfWork();
 
-            await unitOfWork.Init(dbContext, outbox);
+            await unitOfWork.Init(_defaultOutboxDispatcher, dbContext, outbox);
 
             return unitOfWork;
         }

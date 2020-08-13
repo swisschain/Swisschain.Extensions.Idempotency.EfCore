@@ -29,6 +29,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
         {
             var entity = MapToEntity(outbox);
 
+            _dbContext.Outbox.Local.Clear();
             _dbContext.Outbox.Update(entity);
 
             await _dbContext.SaveChangesAsync();

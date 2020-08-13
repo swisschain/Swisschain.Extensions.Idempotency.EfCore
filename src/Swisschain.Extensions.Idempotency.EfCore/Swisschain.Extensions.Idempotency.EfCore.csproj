@@ -10,7 +10,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.6" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="3.1.4" />
-    <PackageReference Include="swisschain.extensions.idempotency" Version="2.0.0-beta.11" />
+    <PackageReference Include="swisschain.extensions.idempotency" Version="2.0.0-beta.13" />
   </ItemGroup>
 
 </Project>

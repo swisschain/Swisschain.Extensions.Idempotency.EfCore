@@ -7,14 +7,17 @@ namespace Swisschain.Extensions.Idempotency.EfCore
 {
     public static class IdempotencyConfigurationBuilderExtensions
     {
-        public static IdempotencyConfigurationBuilder PersistWithEfCore<TUnitOfWork, TDbContext>(this IdempotencyConfigurationBuilder builder,
+        public static IdempotencyConfigurationBuilder<TUnitOfWork> PersistWithEfCore<TUnitOfWork, TDbContext>(
+            this IdempotencyConfigurationBuilder<TUnitOfWork> builder,
             Func<IServiceProvider, TDbContext> dbContextFactory)
 
             where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator 
             where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
         {
             builder.Services.AddTransient<IUnitOfWorkFactory<TUnitOfWork>>(c =>
-                new UnitOfWorkFactory<TUnitOfWork, TDbContext>(() => dbContextFactory.Invoke(c)));
+                new UnitOfWorkFactory<TUnitOfWork, TDbContext>(
+                    c.GetRequiredService<IOutboxDispatcher>(), 
+                    () => dbContextFactory.Invoke(c)));
 
             builder.Services.AddTransient<IOutboxReadRepository>(c =>
                 new OutboxReadRepository<TDbContext>(

@@ -6,11 +6,11 @@ namespace Swisschain.Extensions.Idempotency.EfCore
     public static class ModelBuilderExtensions
     {
         public static ModelBuilder BuildIdempotency(this ModelBuilder modelBuilder, 
-            Action<IdempotencyModelBuilderOptions> optionsBuilder)
+            Action<IdempotencyModelBuilderOptions> optionsBuilder = null)
         {
             var options = new IdempotencyModelBuilderOptions();
 
-            optionsBuilder.Invoke(options);
+            optionsBuilder?.Invoke(options);
 
             options.Validate();
 
