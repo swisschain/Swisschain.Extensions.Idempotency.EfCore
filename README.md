@@ -7,39 +7,53 @@ Entity Framework Core implementations of the Idempotency extensions
 
 ## Initialization
 
-Add `PersistWithEfCore` when configuring `OutboxConfigurationBuilder` inside `services.AddOutbox` call and return an instance of your `DbContext` implementation:
+Add `PersistWithEfCore` while configuring `IdempotencyConfigurationBuilder` inside `services.AddIdempotency` call and return an instance of your `DbContext` implementation:
 
 ```c#
-services.AddOutbox(c =>
+services.AddIdempotency<UnitOfWork>(x =>
 {
-    c.PersistWithEfCore(s =>
-    {
-        var optionsBuilder = s.GetRequiredService<DbContextOptionsBuilder<DatabaseContext>>();
-
-        return new DatabaseContext(optionsBuilder.Options);
-    });
+    x.PersistWithEfCore(s => s.GetRequiredService<DatabaseContext>());
 });
 ```
 
-Implement `IDbContextWithOutbox` by your inheritor of the `DbContext`:
+Implement `IDbContextWithOutbox` and `IDbContextWithIdGenerator` by your inheritor of the `DbContext`:
 
 ```c#
-public class DatabaseContext : DbContext, IDbContextWithOutbox
+public class DatabaseContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
 {
-    public DatabaseContext(DbContextOptions<DatabaseContext> options) :
+    public DatabaseContext(DbContextOptions options) :
         base(options)
     {
     }
 
-    // Do not update this collection directly. Outbox will manage everything for you
-    public DbSet<OutboxEntity> Outbox { get; }
-    
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        // Add outbox to the model builder. You can override table name (`outbox` by default) and initial value for the aggregate ID sequence generator (2 by default):
-        modelBuilder.BuildOutbox();
-    }
+    // Do not update these collections directly. Swisschain.Extensions.Idempotency will manage everything for you
+    public DbSet<OutboxEntity> Outbox { get; set; }
+    public DbSet<IdGeneratorEntity> IsGenerator { get; set; }
 }
 ```
 
-Generate EF migration `Add-Migration Initial` in the Package Manager Console
+Configure `DbContext` model builder:
+
+```c#
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.BuildIdempotency(x =>
+    {
+        x.OutboxTableName = "Outbox"; // It's optional. Default table name is "outbox"
+        x.IdGeneratorTableName = "IdGenerator"; // It's optional. Default table name is "id_generator"
+        
+        // Register ID generators, that you want to use in your application:
+        // Each generator is a named sequence which you can use to get unique ID.
+        
+        x.AddIdGenerator("id_generator_transfers");
+        x.AddIdGenerator("id_generator_orders");
+        
+        // You can specify custom start number and increment size for the generator:
+        
+        x.AddIdGenerator("id_generator_withdrawals", startNumber: 100000, incrementSize: 10);
+    });
+}
+        
+```
+
+Generate new EF migration.
