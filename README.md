@@ -7,6 +7,25 @@ Entity Framework Core implementations of the Idempotency extensions
 
 ## Initialization
 
+Derive your unit of work from `Swisschain.Extensions.Idempotency.EfCore.UnitOfWorkBase<TDbContext>` class, passing your `DbContext` inheritor as a generic parameter:
+
+```c#
+public class TestUnitOfWork : UnitOfWorkBase<TestDbContext>
+{
+    public ITransfersRepository Transfers { get; private set; }
+    public IOrdersRepository Orders { get; private set; }
+
+    protected override void ProvisionRepositories(DatabaseContext dbContext)
+    {
+        Transfers = new TransfersRepository(dbContext);
+        Orders = new OrdersRepository(dbContext);
+    }
+}
+```
+
+Repositories included into the unit of work should accept `DbContext` instance to the constructor and use it for all DB queries. It's recommended to split your repository to two independent classes,
+if you need both unit-of-work-scoped and out-of-the-unit-of-work queries to the DB to avoid confusing.
+
 Add `PersistWithEfCore` while configuring `IdempotencyConfigurationBuilder` inside `services.AddIdempotency` call and return an instance of your `DbContext` implementation:
 
 ```c#
