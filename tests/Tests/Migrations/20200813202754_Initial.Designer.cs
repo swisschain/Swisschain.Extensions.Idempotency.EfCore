@@ -4,22 +4,25 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Tests.Sdk.DbContexts;
+using Tests.Sdk.Persistence;
 
 namespace Tests.Migrations
 {
-    [DbContext(typeof(TestDbContextWithDefaultOptions))]
-    [Migration("20200812221359_Initial_WithDefaultOptions")]
-    partial class Initial_WithDefaultOptions
+    [DbContext(typeof(TestDbContext))]
+    [Migration("20200813202754_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("default_options")
+                .HasDefaultSchema("tests")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                 .HasAnnotation("ProductVersion", "3.1.6")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63)
+                .HasAnnotation("Relational:Sequence:.id_generator_some_sequence", "'id_generator_some_sequence', '', '1', '1', '', '', 'Int64', 'False'")
+                .HasAnnotation("Relational:Sequence:.id_generator_started_from_100", "'id_generator_started_from_100', '', '100', '10', '', '', 'Int64', 'False'")
+                .HasAnnotation("Relational:Sequence:.id_generator_test_entity", "'id_generator_test_entity', '', '1', '1', '', '', 'Int64', 'False'");
 
             modelBuilder.Entity("Swisschain.Extensions.Idempotency.EfCore.IdGeneratorEntity", b =>
                 {
@@ -56,7 +59,7 @@ namespace Tests.Migrations
                     b.ToTable("outbox");
                 });
 
-            modelBuilder.Entity("Tests.Sdk.TestEntity", b =>
+            modelBuilder.Entity("Tests.Sdk.Persistence.TestEntities.TestEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()

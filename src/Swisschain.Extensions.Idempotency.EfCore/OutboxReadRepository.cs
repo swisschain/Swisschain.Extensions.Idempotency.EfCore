@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -66,12 +67,24 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             return JsonConvert.DeserializeObject(envelope.Body, type, new ProtoMessageJsonConverter());
         }
 
-        private static Type FindType(string fullName)
+        private Type FindType(string fullName)
         {
             // TODO: Cache
             return AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a => !a.IsDynamic)
-                .SelectMany(a => a.GetTypes())
+                .SelectMany(a =>
+                {
+                    try
+                    {
+                        return a.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to load assembly {@assembly} has not been found", a.GetName().FullName);
+
+                        return Enumerable.Empty<Type>();
+                    }
+                })
                 .FirstOrDefault(t => t.FullName != null && t.FullName.Equals(fullName)) ?? Type.GetType(fullName);
         }
     }

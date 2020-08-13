@@ -3,16 +3,30 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Tests.Migrations
 {
-    public partial class Initial_WithDefaultOptions : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
-                name: "default_options");
+                name: "tests");
+
+            migrationBuilder.CreateSequence(
+                name: "id_generator_some_sequence",
+                schema: "tests");
+
+            migrationBuilder.CreateSequence(
+                name: "id_generator_started_from_100",
+                schema: "tests",
+                startValue: 100L,
+                incrementBy: 10);
+
+            migrationBuilder.CreateSequence(
+                name: "id_generator_test_entity",
+                schema: "tests");
 
             migrationBuilder.CreateTable(
                 name: "id_generator",
-                schema: "default_options",
+                schema: "tests",
                 columns: table => new
                 {
                     IdempotencyId = table.Column<string>(nullable: false),
@@ -25,7 +39,7 @@ namespace Tests.Migrations
 
             migrationBuilder.CreateTable(
                 name: "outbox",
-                schema: "default_options",
+                schema: "tests",
                 columns: table => new
                 {
                     IdempotencyId = table.Column<string>(nullable: false),
@@ -41,7 +55,7 @@ namespace Tests.Migrations
 
             migrationBuilder.CreateTable(
                 name: "test_entities",
-                schema: "default_options",
+                schema: "tests",
                 columns: table => new
                 {
                     Id = table.Column<long>(nullable: false)
@@ -58,15 +72,27 @@ namespace Tests.Migrations
         {
             migrationBuilder.DropTable(
                 name: "id_generator",
-                schema: "default_options");
+                schema: "tests");
 
             migrationBuilder.DropTable(
                 name: "outbox",
-                schema: "default_options");
+                schema: "tests");
 
             migrationBuilder.DropTable(
                 name: "test_entities",
-                schema: "default_options");
+                schema: "tests");
+
+            migrationBuilder.DropSequence(
+                name: "id_generator_some_sequence",
+                schema: "tests");
+
+            migrationBuilder.DropSequence(
+                name: "id_generator_started_from_100",
+                schema: "tests");
+
+            migrationBuilder.DropSequence(
+                name: "id_generator_test_entity",
+                schema: "tests");
         }
     }
 }

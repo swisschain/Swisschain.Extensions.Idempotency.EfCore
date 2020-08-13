@@ -1,4 +1,4 @@
-﻿namespace Tests.Sdk
+﻿namespace Tests.Sdk.Persistence.TestEntities
 {
     public class TestEntity
     {

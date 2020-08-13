@@ -1,13 +1,12 @@
 ﻿using System.Threading.Tasks;
-using Tests.Sdk.DbContexts;
 
-namespace Tests.Sdk
+namespace Tests.Sdk.Persistence.TestEntities
 {
     public class TestEntitiesRepository
     {
-        private readonly TestDbContextBase _dbContext;
+        private readonly TestDbContext _dbContext;
 
-        public TestEntitiesRepository(TestDbContextBase dbContext)
+        public TestEntitiesRepository(TestDbContext dbContext)
         {
             _dbContext = dbContext;
         }

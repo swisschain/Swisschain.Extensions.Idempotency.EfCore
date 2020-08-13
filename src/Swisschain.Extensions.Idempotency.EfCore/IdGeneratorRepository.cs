@@ -51,12 +51,17 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             valueParameter.DbType = DbType.Int64;
             valueParameter.Value = nextValue;
 
+            command.Parameters.Add(idempotencyParameter);
+            command.Parameters.Add(valueParameter);
+
             await using var reader = await command.ExecuteReaderAsync();
 
             if (!reader.HasRows)
             {
                 throw new InvalidOperationException("Expected data not found");
             }
+
+            await reader.ReadAsync();
 
             return reader.GetInt64(0);
         }

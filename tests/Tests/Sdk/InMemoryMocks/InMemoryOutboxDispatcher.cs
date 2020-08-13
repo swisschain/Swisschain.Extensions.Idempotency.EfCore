@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Swisschain.Extensions.Idempotency;
 
-namespace Tests.Sdk
+namespace Tests.Sdk.InMemoryMocks
 {
     public class InMemoryOutboxDispatcher : IOutboxDispatcher
     {
@@ -24,6 +24,12 @@ namespace Tests.Sdk
             _publishedEvents.Add(evt);
 
             return Task.CompletedTask;
+        }
+
+        public void Clear()
+        {
+            _sentCommands.Clear();
+            _publishedEvents.Clear();
         }
     }
 }
