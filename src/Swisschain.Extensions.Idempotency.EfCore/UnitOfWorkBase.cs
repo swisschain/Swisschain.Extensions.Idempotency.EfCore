@@ -13,6 +13,10 @@ namespace Swisschain.Extensions.Idempotency.EfCore
         
         protected abstract void ProvisionRepositories(TDbContext dbContext);
 
+        /// <summary>
+        /// Initializes transactional unit of work.
+        /// Used internally by Swisschain.Idempotency infrastructure
+        /// </summary>
         public async Task Init(IOutboxDispatcher defaultOutboxDispatcher, TDbContext dbContext, Outbox outbox)
         {
             _dbContext = dbContext;
@@ -25,11 +29,24 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             await Init(defaultOutboxDispatcher, outboxWriteRepository, outbox);
         }
 
+        /// <summary>
+        /// Initializes non-transactional unit of work.
+        /// Used internally by Swisschain.Idempotency infrastructure
+        /// </summary>
+        public Task Init(TDbContext dbContext)
+        {
+            _dbContext = dbContext;
+
+            ProvisionRepositories(dbContext);
+
+            return Task.CompletedTask;
+        }
+
         protected override Task CommitImpl()
         {
             if (_transaction == null)
             {
-                throw new InvalidOperationException("UnitOfWork is not initialized");
+                throw new InvalidOperationException("UnitOfWork is either not initialized or its non-transactional");
             }
 
             return _transaction.CommitAsync();
@@ -39,7 +56,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
         {
             if (_transaction == null)
             {
-                throw new InvalidOperationException("UnitOfWork is not initialized");
+                throw new InvalidOperationException("UnitOfWork is either not initialized or its non-transactional");
             }
 
             return _transaction.RollbackAsync();

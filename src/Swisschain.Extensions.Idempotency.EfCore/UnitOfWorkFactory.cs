@@ -26,5 +26,16 @@ namespace Swisschain.Extensions.Idempotency.EfCore
 
             return unitOfWork;
         }
+
+        public async Task<TUnitOfWork> Create()
+        {
+            var dbContext = _dbContextFactory.Invoke();
+            var unitOfWork = new TUnitOfWork();
+
+            await unitOfWork.Init(dbContext);
+
+            return unitOfWork;
+            
+        }
     }
 }
