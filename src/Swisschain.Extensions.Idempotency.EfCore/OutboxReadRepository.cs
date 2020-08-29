@@ -14,12 +14,15 @@ namespace Swisschain.Extensions.Idempotency.EfCore
     {
         private readonly ILogger<OutboxReadRepository<TDbContext>> _logger;
         private readonly Func<TDbContext> _dbContextFactory;
+        private readonly OutboxDeserializerOptions _deserializerOptions;
 
         public OutboxReadRepository(ILogger<OutboxReadRepository<TDbContext>> logger, 
-            Func<TDbContext> dbContextFactory)
+            Func<TDbContext> dbContextFactory,
+            OutboxDeserializerOptions deserializerOptions)
         {
             _logger = logger;
             _dbContextFactory = dbContextFactory;
+            _deserializerOptions = deserializerOptions;
         }
 
         public async Task<Outbox> GetOrDefault(string idempotencyId)
@@ -57,35 +60,41 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             var envelope = JsonConvert.DeserializeObject<ObjectEnvelope>(value);
             var type = FindType(envelope.Type);
 
-            if (type == null)
-            {
-                _logger.LogWarning("Type {@type} has not been found", envelope.Type);
-
-                throw new InvalidOperationException($"Type {envelope.Type} not found");
-            }
-
             return JsonConvert.DeserializeObject(envelope.Body, type, new ProtoMessageJsonConverter());
         }
 
         private Type FindType(string fullName)
         {
-            // TODO: Cache
-            return AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic)
-                .SelectMany(a =>
+            return TypesCache.Instance.GetOrAdd(fullName,
+                x =>
                 {
-                    try
+                    foreach (var assembly in _deserializerOptions.Assemblies)
                     {
-                        return a.GetTypes();
-                    }
-                    catch (ReflectionTypeLoadException ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to load assembly {@assembly} has not been found", a.GetName().FullName);
+                        try
+                        {
+                            var type = assembly.GetType(fullName, false);
 
-                        return Enumerable.Empty<Type>();
+                            if (type != null)
+                            {
+                                return type;
+                            }
+                        }
+                        catch (ReflectionTypeLoadException ex)
+                        {
+                            _logger.LogWarning(ex,
+                                "Failed to load assembly {@assembly} while finding the type {@type}",
+                                assembly.GetName().FullName,
+                                fullName);
+
+                            throw new InvalidOperationException($"Failed to load assembly {assembly} while finding the type {fullName}",
+                                ex);
+                        }
                     }
-                })
-                .FirstOrDefault(t => t.FullName != null && t.FullName.Equals(fullName)) ?? Type.GetType(fullName);
+
+                    _logger.LogWarning("Type {@type} has not been found", fullName);
+
+                    throw new InvalidOperationException($"Type {fullName} not found");
+                });
         }
     }
 }
