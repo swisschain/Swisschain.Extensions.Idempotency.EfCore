@@ -9,10 +9,18 @@ namespace Swisschain.Extensions.Idempotency.EfCore
     {
         public static IdempotencyConfigurationBuilder<TUnitOfWork> PersistWithEfCore<TUnitOfWork, TDbContext>(
             this IdempotencyConfigurationBuilder<TUnitOfWork> builder,
-            Func<IServiceProvider, TDbContext> dbContextFactory,
-            Action<IdempotencyEfCoreOptions> optionsBuilder = null)
+            Func<IServiceProvider, TDbContext> dbContextFactory)
+            where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
+            where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
+        {
+            return builder.PersistWithEfCore(dbContextFactory, null);
+        }
 
-            where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator 
+        public static IdempotencyConfigurationBuilder<TUnitOfWork> PersistWithEfCore<TUnitOfWork, TDbContext>(
+            this IdempotencyConfigurationBuilder<TUnitOfWork> builder,
+            Func<IServiceProvider, TDbContext> dbContextFactory,
+            Action<IdempotencyEfCoreOptions> optionsBuilder)
+            where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
             where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
         {
             var options = new IdempotencyEfCoreOptions();
@@ -21,7 +29,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
 
             builder.Services.AddTransient<IUnitOfWorkFactory<TUnitOfWork>>(c =>
                 new UnitOfWorkFactory<TUnitOfWork, TDbContext>(
-                    c.GetRequiredService<IOutboxDispatcher>(), 
+                    c.GetRequiredService<IOutboxDispatcher>(),
                     () => dbContextFactory.Invoke(c)));
 
             builder.Services.AddTransient<IOutboxReadRepository>(c =>
@@ -29,10 +37,11 @@ namespace Swisschain.Extensions.Idempotency.EfCore
                     c.GetRequiredService<ILogger<OutboxReadRepository<TDbContext>>>(),
                     () => dbContextFactory.Invoke(c),
                     options.OutboxDeserializer));
+            
             builder.Services.AddTransient<IIdGeneratorRepository, IdGeneratorRepository<TDbContext>>(c =>
                 new IdGeneratorRepository<TDbContext>(
                     () => dbContextFactory.Invoke(c)));
-            
+
             return builder;
         }
     }
