@@ -27,7 +27,12 @@ namespace Tests.Sdk
             services.AddLogging();
             services.AddIdempotency<TestUnitOfWork>(x =>
             {
-                x.PersistWithEfCore(s => Fixture.CreateDbContext());
+                x.PersistWithEfCore(
+                    s => Fixture.CreateDbContext(),
+                    o =>
+                    {
+                        o.OutboxDeserializer.AddAssembly(typeof(PersistenceTests).Assembly);
+                    });
                 x.Services.AddSingleton<IOutboxDispatcher>(OutboxDispatcher);
             });
 
