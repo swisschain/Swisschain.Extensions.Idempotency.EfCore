@@ -15,7 +15,7 @@ namespace Tests.Sdk.Persistence
 
         public DbSet<TestEntity> TestEntities { get; set; }
         public DbSet<OutboxEntity> Outbox { get; set; }
-        public DbSet<IdGeneratorEntity> IsGenerator { get; set; }
+        public DbSet<IdGeneratorEntity> IdGenerator { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
