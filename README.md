@@ -31,9 +31,16 @@ Add `PersistWithEfCore` while configuring `IdempotencyConfigurationBuilder` insi
 ```c#
 services.AddIdempotency<UnitOfWork>(x =>
 {
-    x.PersistWithEfCore(s => s.GetRequiredService<DatabaseContext>());
+    x.PersistWithEfCore(
+        s => s.GetRequiredService<DatabaseContext>(),
+        o => 
+        {
+            o.OutboxDeserializer.AddAssembly(typeof(OrderCancelled).Assembly);
+        });
 });
 ```
+
+Use `OutboxDeserializerOptions.OutboxDeserializer.AddAssembly` method to register non primitive types which can be persisted in the outbox.
 
 Implement `IDbContextWithOutbox` and `IDbContextWithIdGenerator` by your inheritor of the `DbContext`:
 
