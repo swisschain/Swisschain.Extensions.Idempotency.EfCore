@@ -1,6 +1,11 @@
-﻿namespace Swisschain.Extensions.Idempotency.EfCore
+﻿using System;
+using Microsoft.EntityFrameworkCore;
+
+namespace Swisschain.Extensions.Idempotency.EfCore
 {
-    public sealed class IdempotencyEfCoreOptions
+    public sealed class IdempotencyEfCoreOptions<TDbContext, TUnitOfWork>
+        where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
+        where TUnitOfWork : UnitOfWorkBase<TDbContext>
     {
         internal IdempotencyEfCoreOptions()
         {
@@ -8,5 +13,6 @@
         }
 
         public OutboxDeserializerOptions OutboxDeserializer { get; }
+        public Func<IServiceProvider, TUnitOfWork> UnitOfWorkFactory { get; }
     }
 }

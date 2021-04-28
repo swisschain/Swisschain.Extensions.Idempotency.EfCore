@@ -11,7 +11,7 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             this IdempotencyConfigurationBuilder<TUnitOfWork> builder,
             Func<IServiceProvider, TDbContext> dbContextFactory)
             where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
-            where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
+            where TUnitOfWork : UnitOfWorkBase<TDbContext>
         {
             return builder.PersistWithEfCore(dbContextFactory, null);
         }
@@ -19,18 +19,32 @@ namespace Swisschain.Extensions.Idempotency.EfCore
         public static IdempotencyConfigurationBuilder<TUnitOfWork> PersistWithEfCore<TUnitOfWork, TDbContext>(
             this IdempotencyConfigurationBuilder<TUnitOfWork> builder,
             Func<IServiceProvider, TDbContext> dbContextFactory,
-            Action<IdempotencyEfCoreOptions> optionsBuilder)
+            Action<IdempotencyEfCoreOptions<TDbContext, TUnitOfWork>> optionsBuilder)
             where TDbContext : DbContext, IDbContextWithOutbox, IDbContextWithIdGenerator
-            where TUnitOfWork : UnitOfWorkBase<TDbContext>, new()
+            where TUnitOfWork : UnitOfWorkBase<TDbContext>
         {
-            var options = new IdempotencyEfCoreOptions();
+            var options = new IdempotencyEfCoreOptions<TDbContext, TUnitOfWork>();
 
             optionsBuilder?.Invoke(options);
+
+            Func<IServiceProvider, TUnitOfWork> unitOfWorkFactory;
+
+            if (options.UnitOfWorkFactory == null)
+            {
+                builder.Services.AddTransient<TUnitOfWork>();
+
+                unitOfWorkFactory = s => s.GetRequiredService<TUnitOfWork>();
+            }
+            else
+            {
+                unitOfWorkFactory = options.UnitOfWorkFactory;
+            }
 
             builder.Services.AddTransient<IUnitOfWorkFactory<TUnitOfWork>>(c =>
                 new UnitOfWorkFactory<TUnitOfWork, TDbContext>(
                     c.GetRequiredService<IOutboxDispatcher>(),
-                    () => dbContextFactory.Invoke(c)));
+                    () => dbContextFactory.Invoke(c),
+                    () => unitOfWorkFactory(c)));
 
             builder.Services.AddTransient<IOutboxReadRepository>(c =>
                 new OutboxReadRepository<TDbContext>(
