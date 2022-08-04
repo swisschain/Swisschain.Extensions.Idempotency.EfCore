@@ -377,6 +377,23 @@ namespace Tests
             response2.Id.ShouldBe(200);
         }
 
+        [Fact]
+        public async Task CanBeDisposedAfterTimeoutException()
+        {
+            // Arrange/Act/Assert
+
+            var unitOfWork = await UnitOfWorkManager.Begin("a");
+
+            try
+            {
+                await Should.ThrowAsync<Npgsql.NpgsqlException>(async () => await unitOfWork.TestEntities.RiseTimeoutException());                
+            }
+            finally
+            {
+                await unitOfWork.DisposeAsync();
+            }
+        }
+
         private class TestDomainEvent
         {
             public long Id { get; set; }
