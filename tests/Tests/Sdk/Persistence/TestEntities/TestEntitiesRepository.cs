@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using System.Data;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Tests.Sdk.Persistence.TestEntities
 {
@@ -38,6 +41,24 @@ namespace Tests.Sdk.Persistence.TestEntities
             var entity = await _dbContext.TestEntities.FindAsync(id);
 
             return entity?.Name;
+        }
+
+        public async Task RiseTimeoutException()
+        {
+            await using var connection = (NpgsqlConnection)_dbContext.Database.GetDbConnection();
+
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync();
+            }
+
+
+            await using var command = connection.CreateCommand();
+
+            command.CommandTimeout = 1;
+            command.CommandText = "SELECT pg_sleep(2)";
+
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

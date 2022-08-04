@@ -52,14 +52,24 @@ namespace Swisschain.Extensions.Idempotency.EfCore
             return _transaction.CommitAsync();
         }
 
-        protected override Task RollbackImpl()
+        protected override async Task RollbackImpl()
         {
             if (_transaction == null)
             {
                 throw new InvalidOperationException("UnitOfWork is either not initialized or its non-transactional");
             }
 
-            return _transaction.RollbackAsync();
+            try
+            {
+                await _transaction.RollbackAsync();
+            }
+            // In the case if an NpgsqlException was trown within the transaction
+            // an attempt to roll it back leads to the InvalidOperationException.
+            // NOTE: Previously, in Npgsql.EntityFrameworkCore.PostgreSQL v5.0.2,
+            // the ObjectDisposedException was used here instead of the InvalidOperationException
+            catch (InvalidOperationException e) when (e.Message == "This NpgsqlTransaction has completed; it is no longer usable.")
+            {                
+            }
         }
 
         protected override async ValueTask DisposeAsync(bool disposing)
